@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Linq;
+using System.Collections;
 using System.Text.RegularExpressions;
+
+using FLB;
 
 using Il2CppSLZ.Marrow.SceneStreaming;
 
@@ -14,11 +16,11 @@ using MelonLoader.Utils;
 
 using Microsoft.Win32;
 
-[assembly: MelonInfo(typeof(FusionServerBrowser_Mod.Core), "FLB", "1.0.0", "HAHOOS", null)]
+[assembly: MelonInfo(typeof(Core), "FLB", "1.0.1", "HAHOOS", null)]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 [assembly: MelonPlatform(MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X64)]
 
-namespace FusionServerBrowser_Mod
+namespace FLB
 {
     public class Core : MelonMod
     {
@@ -248,7 +250,7 @@ namespace FusionServerBrowser_Mod
 
             if (NetworkLayerManager.Layer.Matchmaker != null)
             {
-                NetworkLayerManager.Layer.Matchmaker.RequestLobbies(x => AttemptJoin(x, code));
+                NetworkLayerManager.Layer.Matchmaker.RequestLobbiesByCode(code, x => AttemptJoin(x, code));
             }
             else
             {
@@ -261,13 +263,10 @@ namespace FusionServerBrowser_Mod
 
         private void AttemptJoin(IMatchmaker.MatchmakerCallbackInfo x, string code)
         {
-            LobbyInfo targetLobby = null;
-
-            if (x.Lobbies != null)
-                targetLobby = x.Lobbies.FirstOrDefault(x => x.Metadata.LobbyInfo?.LobbyCode == code).Metadata.LobbyInfo;
+            LobbyInfo targetLobby = x.Lobbies.FirstOrDefault().Metadata.LobbyInfo;
 
 
-            if (targetLobby == null)
+            if (targetLobby == null || targetLobby.LobbyCode == null)
             {
                 LoggerInstance.Error("The lobby was not found");
                 ErrorNotif("The lobby you wanted to join was not found!");
@@ -281,7 +280,7 @@ namespace FusionServerBrowser_Mod
                 {
                     LoggerInstance.Warning("Could not find host, unable to verify if you can join the lobby (Privacy: Friends Only)");
                 }
-                else if (!NetworkLayerManager.Layer.IsFriend(host.LongId))
+                else if (!NetworkLayerManager.Layer.IsFriend(host.PlatformID))
                 {
                     LoggerInstance.Error("The lobby is friends only and you are not friends with the host, cannot join");
                     ErrorNotif("Cannot join the lobby, because it is friends only and you are not friends with the host!");
