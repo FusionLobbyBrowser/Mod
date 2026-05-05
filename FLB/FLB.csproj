@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
@@ -9,6 +9,12 @@
 		<AssemblyOriginatorKeyFile>$(SolutionDir)\key.snk</AssemblyOriginatorKeyFile>
 
 	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="Dependencies\Bridge.exe" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Dependencies\Bridge.exe" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp">
@@ -60,6 +66,5 @@
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="ECHO Copying $(TargetName).dll to Mods folder&#xD;&#xA; COPY &quot;$(TargetPath)&quot; &quot;$(BONELAB_DIR)\Mods&quot;" />
-		<Exec Command="ECHO Copying $(TargetName).pdb to Mods folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(BONELAB_DIR)\Mods&quot;" />
 	</Target>
 </Project>

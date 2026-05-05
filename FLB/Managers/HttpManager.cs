@@ -3,10 +3,11 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System;
 
-namespace FLB
+namespace FLB.Managers
 {
-    internal static class HttpServer
+    internal static class HttpManager
     {
         public static int Port { get; set; } = 25712;
 
@@ -40,36 +41,52 @@ namespace FLB
                     var layer = req.QueryString["layer"];
                     if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(layer))
                     {
-                        resp.StatusCode = 400;
-                        byte[] errorBuffer = Encoding.UTF8.GetBytes("Missing code or layer parameter.");
-                        resp.ContentType = "text/plain";
-                        resp.ContentLength64 = errorBuffer.Length;
-                        await resp.OutputStream.WriteAsync(errorBuffer);
-                        resp.Close();
-                        continue;
+                        await resp.Respond("Missing code or layer parameter.", 400);
                     }
                     else
                     {
-                        resp.StatusCode = 200;
-                        byte[] responseBuffer = Encoding.UTF8.GetBytes("Join request received.");
-                        resp.ContentType = "text/plain";
-                        resp.ContentLength64 = responseBuffer.Length;
-                        await resp.OutputStream.WriteAsync(responseBuffer);
-                        resp.Close();
-                        Core.Logger.Msg($"Received join request: code={code}, layer={layer}");
+                        await resp.Respond("Join request received.", 200);
+                        Core.Logger.Msg("Received join request");
+                        Core.Logger.Msg($"[+] Layer: {layer}");
+                        Core.Logger.Msg($"[+] Code: {layer}");
                         Requests.Add($"{layer}-{code}");
                         continue;
                     }
                 }
+                else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/")
+                {
+                    await resp.Respond("OK", 200);
+                }
 
-                resp.StatusCode = 404;
-                byte[] notFoundBuffer = Encoding.UTF8.GetBytes("Not Found");
-                resp.ContentType = "text/plain";
-                resp.ContentLength64 = notFoundBuffer.Length;
-                await resp.OutputStream.WriteAsync(notFoundBuffer);
-                resp.Close();
+                await resp.Respond("Not Found", 404);
             }
+        }
 
+        public static async Task Respond(this HttpListenerResponse resp, string message, int statusCode = 200)
+        {
+            resp.StatusCode = statusCode;
+            byte[] buffer = Encoding.UTF8.GetBytes(message);
+            resp.ContentType = "text/plain";
+            resp.ContentLength64 = buffer.Length;
+            await resp.OutputStream.WriteAsync(buffer);
+            resp.Close();
+        }
+
+        public static void Setup()
+        {
+            Core.Logger.Msg("[======== HTTP =======]");
+            Core.Logger.Msg("Starting HTTP Server...");
+
+            try
+            {
+                Start();
+                Core.Logger.Msg("Started HTTP Server!");
+            }
+            catch (Exception ex)
+            {
+                Core.Logger.Error("Failed to start HTTP Server :(", ex);
+            }
+            Core.Logger.Msg("[===================]");
         }
 
         public static void Start()
@@ -94,10 +111,9 @@ namespace FLB
         {
             if (Requests.Any())
             {
-                Requests.ForEach(Core.Instance.ArgJoin);
+                Requests.ForEach(FusionManager.ArgJoin);
                 Requests.Clear();
             }
-
         }
     }
 }
