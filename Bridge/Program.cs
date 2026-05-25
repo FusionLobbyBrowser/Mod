@@ -26,15 +26,18 @@ namespace Bridge
             }
             else
             {
-                Console.WriteLine("No argument found!");
+                Console.WriteLine("[Error] No argument found!");
                 await Task.Delay(EXIT_DELAY);
                 return;
             }
+            if (arg.EndsWith('/'))
+                arg = arg[..^1];
+
             var uri = new Uri(arg);
             if (uri.Host != "join")
             {
-                Console.WriteLine("Invalid host, the URL must be the following");
-                Console.WriteLine(" -> flb-bridge://join/[base64]");
+                Console.WriteLine("[Error] Invalid host, the URL must be the following");
+                Console.WriteLine("[Error]  -> flb-bridge://join/[base64]");
                 await Task.Delay(EXIT_DELAY);
                 return;
             }
@@ -42,7 +45,18 @@ namespace Bridge
             if (arg.Length % 4 != 0)
                 arg += ("===")[..(4 - (arg.Length % 4))];
             arg = arg.Replace("-", "+").Replace("_", "/");
-            byte[] data = Convert.FromBase64String(arg);
+            byte[] data;
+            try
+            {
+                data = Convert.FromBase64String(arg);
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("[Error] Invalid argument, it must a be a modified base64 value!");
+                await Task.Delay(EXIT_DELAY);
+                return;
+            }
+
             string decoded = Encoding.UTF8.GetString(data);
 
             string[] split = decoded.Split(" || ");
@@ -57,8 +71,8 @@ namespace Bridge
             }
             else
             {
-                Console.WriteLine("Invalid data format, must be the following! (arrow is NOT part of the format)");
-                Console.WriteLine(" -> [layer name] || [lobby code]");
+                Console.WriteLine("[Error] Invalid data format, must be the following! (arrow is NOT part of the format)");
+                Console.WriteLine("[Error]  -> [layer name] || [lobby code]");
                 await Task.Delay(EXIT_DELAY);
                 return;
             }
@@ -79,14 +93,14 @@ namespace Bridge
             var root = current?.Parent?.Parent;
             if (root == null)
             {
-                Console.WriteLine("Failed to find game folder!");
+                Console.WriteLine("[Error] Failed to find game folder!");
                 await Task.Delay(EXIT_DELAY);
                 return;
             }
             var executable = root.GetFiles().FirstOrDefault(x => x.Name.StartsWith("BONELAB") && x.Name.EndsWith(".exe"));
             if (executable == null)
             {
-                Console.WriteLine("Failed to find executable!");
+                Console.WriteLine("[Error] Failed to find executable!");
                 await Task.Delay(EXIT_DELAY);
                 return;
             }

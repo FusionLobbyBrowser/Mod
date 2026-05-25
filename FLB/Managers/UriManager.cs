@@ -13,8 +13,6 @@ namespace FLB.Managers
     {
         private const string ARGUMENT_STRING = " %1";
 
-        private const string URI_NAME = "bonelab-flb";
-
         public static void RegisterGame(string name, bool allowArguments = true)
         {
             var path = MelonEnvironment.GameExecutablePath;

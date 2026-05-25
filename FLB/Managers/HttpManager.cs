@@ -38,42 +38,42 @@ namespace FLB.Managers
                 resp.AppendHeader("Access-Control-Allow-Origin", "*");
 
                 if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/join")
-                {
-                    Console.WriteLine("Got join request! Reading...");
-                    using var reader = new StreamReader(req.InputStream, req.ContentEncoding);
-                    var body = await reader.ReadToEndAsync();
-                    Core.Logger.Msg("Received: " + body);
-                    var json = JsonSerializer.Deserialize<JsonElement>(body);
-                    string code, layer;
-                    if (!json.TryGetProperty("code", out var codeElem) || !json.TryGetProperty("layer", out var layerElem))
-                    {
-                        await resp.Respond("Missing code or layer parameter.", 400);
-                        return;
-                    }
-
-                    code = codeElem.GetString();
-                    layer = layerElem.GetString();
-
-                    if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(layer))
-                    {
-                        await resp.Respond("Missing code or layer parameter.", 400);
-                    }
-                    else
-                    {
-                        await resp.Respond("Join request received.", 200);
-                        Core.Logger.Msg("Received join request");
-                        Core.Logger.Msg($"[+] Layer: {layer}");
-                        Core.Logger.Msg($"[+] Code: {code}");
-                        Requests.Add($"{layer}-{code}");
-                        continue;
-                    }
-                }
+                    await Join(req, resp);
                 else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/")
-                {
                     await resp.Respond("OK", 200);
-                }
 
                 await resp.Respond("Not Found", 404);
+            }
+        }
+
+        private static async Task Join(HttpListenerRequest req, HttpListenerResponse resp)
+        {
+            Console.WriteLine("Got join request! Reading...");
+            using var reader = new StreamReader(req.InputStream, req.ContentEncoding);
+            var body = await reader.ReadToEndAsync();
+            Core.Logger.Msg("Received: " + body);
+            var json = JsonSerializer.Deserialize<JsonElement>(body);
+            string code, layer;
+            if (!json.TryGetProperty("code", out var codeElem) || !json.TryGetProperty("layer", out var layerElem))
+            {
+                await resp.Respond("Missing code or layer parameter.", 400);
+                return;
+            }
+
+            code = codeElem.GetString();
+            layer = layerElem.GetString();
+
+            if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(layer))
+            {
+                await resp.Respond("Missing code or layer parameter.", 400);
+            }
+            else
+            {
+                await resp.Respond("Join request received.", 200);
+                Core.Logger.Msg("Received join request");
+                Core.Logger.Msg($"[+] Layer: {layer}");
+                Core.Logger.Msg($"[+] Code: {code}");
+                Requests.Add($"{layer}-{code}");
             }
         }
 
