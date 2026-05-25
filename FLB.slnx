@@ -1,4 +1,6 @@
 <Solution>
   <Project Path="Bridge/Bridge.csproj" Id="68d78875-b7b1-4b35-b8c4-3577517e7824" />
-  <Project Path="FLB/FLB.csproj" />
+  <Project Path="FLB/FLB.csproj">
+    <BuildDependency Project="Bridge/Bridge.csproj" />
+  </Project>
 </Solution>
