@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
+using System.IO;
+using System.Text.Json;
 
 namespace FLB.Managers
 {
@@ -31,14 +33,27 @@ namespace FLB.Managers
                 HttpListenerResponse resp = ctx.Response;
 
                 resp.AddHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
-                resp.AddHeader("Access-Control-Allow-Methods", "GET");
+                resp.AddHeader("Access-Control-Allow-Methods", "GET, POST");
                 resp.AddHeader("Access-Control-Max-Age", "1728000");
                 resp.AppendHeader("Access-Control-Allow-Origin", "*");
 
-                if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/join")
+                if (req.HttpMethod == "POST" && req.Url.AbsolutePath == "/join")
                 {
-                    var code = req.QueryString["code"];
-                    var layer = req.QueryString["layer"];
+                    Console.WriteLine("Got join request! Reading...");
+                    using var reader = new StreamReader(req.InputStream, req.ContentEncoding);
+                    var body = await reader.ReadToEndAsync();
+                    Core.Logger.Msg("Received: " + body);
+                    var json = JsonSerializer.Deserialize<JsonElement>(body);
+                    string code, layer;
+                    if (!json.TryGetProperty("code", out var codeElem) || !json.TryGetProperty("layer", out var layerElem))
+                    {
+                        await resp.Respond("Missing code or layer parameter.", 400);
+                        return;
+                    }
+
+                    code = codeElem.GetString();
+                    layer = layerElem.GetString();
+
                     if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(layer))
                     {
                         await resp.Respond("Missing code or layer parameter.", 400);
@@ -48,7 +63,7 @@ namespace FLB.Managers
                         await resp.Respond("Join request received.", 200);
                         Core.Logger.Msg("Received join request");
                         Core.Logger.Msg($"[+] Layer: {layer}");
-                        Core.Logger.Msg($"[+] Code: {layer}");
+                        Core.Logger.Msg($"[+] Code: {code}");
                         Requests.Add($"{layer}-{code}");
                         continue;
                     }

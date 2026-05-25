@@ -7,25 +7,23 @@ namespace FLB.Managers
 {
     public static class BridgeManager
     {
-        public const string FILE_NAME = "Bridge.exe";
+        public const string FILE_NAME = "BONELAB";
 
         private const string DIRECTORY = "Dependencies.";
 
         public static string USERDATA => Path.Combine(MelonEnvironment.UserDataDirectory, "FLB");
 
-        public static string BRIDGEPATH => Path.Combine(USERDATA, FILE_NAME);
-
-        public static Stream GetFile()
+        public static Stream GetFile(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            var name = assembly.GetName().Name;
-            var path = $"{name}.{DIRECTORY}{FILE_NAME}";
+            var _name = assembly.GetName().Name;
+            var path = $"{_name}.{DIRECTORY}{name}";
 
             return assembly.GetManifestResourceStream(path);
         }
 
-        public static void CreateFile()
+        public static void CreateFile(string name)
         {
             if (!Directory.Exists(USERDATA))
             {
@@ -33,23 +31,25 @@ namespace FLB.Managers
                 Directory.CreateDirectory(USERDATA);
             }
 
-            Core.Logger.Msg($"Creating {FILE_NAME}");
+            Core.Logger.Msg($"Creating {name}");
 
-            using var embed = GetFile();
-            using var stream = File.Create(BRIDGEPATH);
+            using var embed = GetFile(name);
+            using var stream = File.Create(Path.Combine(USERDATA, name));
             stream.Position = 0;
             embed.Position = 0;
             embed.CopyTo(stream);
             stream.Flush();
 
-            Core.Logger.Msg($"Created {FILE_NAME}");
+            Core.Logger.Msg($"Created {name}");
         }
 
         public static void Setup()
         {
             Core.Logger.Msg("[======= BRIDGE =======]");
-            CreateFile();
-            UriManager.RegisterURI("flb-bridge", BRIDGEPATH, true);
+            CreateFile($"{FILE_NAME}.exe");
+            CreateFile("Bridge.dll");
+            CreateFile("Bridge.runtimeconfig.json");
+            UriManager.RegisterURI("flb-bridge", Path.Combine(USERDATA, $"{FILE_NAME}.exe"), true);
         }
     }
 }

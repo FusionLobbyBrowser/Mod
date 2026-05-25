@@ -363,3 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 *.snk
 /FLB/Dependencies/Bridge.exe
+/FLB/Dependencies/BONELAB.exe
+/FLB/Dependencies/BONELAB.dll
+/FLB/Dependencies/Bridge.dll
+/FLB/Dependencies/Bridge.runtimeconfig.json
