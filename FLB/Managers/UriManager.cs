@@ -39,27 +39,5 @@ namespace FLB.Managers
             }
 #pragma warning restore CA1416 // Validate platform compatibility
         }
-
-        public static void Setup()
-        {
-            Core.Logger.Msg("[======== URI ========]");
-            Core.Logger.Msg("Registering URI Scheme...");
-            try
-            {
-                RegisterGame(URI_NAME);
-                Core.Logger.Msg("Registered URI Scheme!");
-            }
-            catch (Exception ex)
-            {
-                Core.Logger.Error("Failed to register URI scheme :(", ex);
-            }
-            var arg = MelonLaunchOptions.CommandLineArgs.FirstOrDefault(x => x.StartsWith($"{URI_NAME}://"));
-            if (!string.IsNullOrWhiteSpace(arg))
-            {
-                Core.Logger.Msg("Game launched from website, preparing to join lobby...");
-                var info = Regex.Match(arg, URI_NAME + ":\\/\\/(.*?)\\/")?.Groups?[1].Value;
-                FusionManager.ArgJoin(info);
-            }
-        }
     }
 }

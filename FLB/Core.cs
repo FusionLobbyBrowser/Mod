@@ -18,7 +18,6 @@ namespace FLB
             Logger = LoggerInstance;
             BridgeManager.Setup();
             ArgumentsManager.Setup();
-            UriManager.Setup();
             HttpManager.Setup();
             LoggerInstance.Msg("Initialized.");
         }
