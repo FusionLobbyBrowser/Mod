@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 using Bridge;
 
-[assembly: AssemblyTitle("FLB Bridge")]
+[assembly: AssemblyTitle("A middleman for communication between the FLB website and the game")]
 [assembly: AssemblyDescription("A middleman for communication between the FLB website and the game")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("HAHOOS")]
