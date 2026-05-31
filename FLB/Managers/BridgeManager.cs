@@ -7,7 +7,7 @@ namespace FLB.Managers
 {
     public static class BridgeManager
     {
-        public const string FILE_NAME = "BONELAB";
+        public const string FILE_NAME = "Bridge";
 
         private const string DIRECTORY = "Dependencies.";
 
@@ -47,8 +47,8 @@ namespace FLB.Managers
         {
             Core.Logger.Msg("[======= BRIDGE =======]");
             CreateFile($"{FILE_NAME}.exe");
-            CreateFile("Bridge.dll");
-            CreateFile("Bridge.runtimeconfig.json");
+            CreateFile($"{FILE_NAME}.dll");
+            CreateFile($"{FILE_NAME}.runtimeconfig.json");
             UriManager.RegisterURI("flb-bridge", Path.Combine(USERDATA, $"{FILE_NAME}.exe"), true);
         }
     }

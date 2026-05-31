@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="ECHO Copying $(TargetName).exe to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).exe&quot; &quot;../FLB/Dependencies/BONELAB.exe&quot;" />
+		<Exec Command="ECHO Copying $(TargetName).exe to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).exe&quot; &quot;../FLB/Dependencies/&quot;" />
 		<Exec Command="ECHO Copying $(TargetName).dll to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).dll&quot; &quot;../FLB/Dependencies/&quot;" />
 		<Exec Command="ECHO Copying $(TargetName).runtimeconfig.json to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).runtimeconfig.json&quot; &quot;../FLB/Dependencies/&quot;" />
 	</Target>

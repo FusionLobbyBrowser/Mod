@@ -1,24 +1,30 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Bridge
 {
     public static class Program
     {
+        public const string VERSION = "1.0.0";
+
         private const string HOST = "http://localhost:25712/";
 
-        private const int EXIT_DELAY = 3000;
+        private const int EXIT_DELAY = 5;
+
+        private readonly static Logger Logger = new();
 
         public static async Task Main(string[] args)
         {
-            Console.WriteLine("FLB Bridge was launched, checking for data...");
+            Logger.Info($"FLB Bridge | v{VERSION}");
             string arg;
             if (args.Length > 0)
             {
@@ -26,8 +32,9 @@ namespace Bridge
             }
             else
             {
-                Console.WriteLine("[Error] No argument found!");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Error("No argument found! The executable must be launched with the following URL");
+                Logger.Error(" -> flb-bridge://join/[base64]");
+                await ExitApp();
                 return;
             }
             if (arg.EndsWith('/'))
@@ -36,9 +43,9 @@ namespace Bridge
             var uri = new Uri(arg);
             if (uri.Host != "join")
             {
-                Console.WriteLine("[Error] Invalid host, the URL must be the following");
-                Console.WriteLine("[Error]  -> flb-bridge://join/[base64]");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Error("Invalid host, the URL must be the following");
+                Logger.Error(" -> flb-bridge://join/[base64]");
+                await ExitApp();
                 return;
             }
             arg = uri.AbsolutePath[1..];
@@ -52,8 +59,8 @@ namespace Bridge
             }
             catch (FormatException)
             {
-                Console.WriteLine("[Error] Invalid argument, it must a be a modified base64 value!");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Error("Invalid argument, it must a be a modified base64 value!");
+                await ExitApp();
                 return;
             }
 
@@ -61,19 +68,17 @@ namespace Bridge
 
             string[] split = decoded.Split(" || ");
 
-            Console.WriteLine(split.Length);
-
             if (split.Length == 2)
             {
-                Console.WriteLine("Received the following data!");
-                Console.WriteLine($" -> Code: {split[1]}");
-                Console.WriteLine($" -> Layer: {split[0]}");
+                Logger.Info("Received the following data!");
+                Logger.Info($" -> Code: {split[1]}");
+                Logger.Info($" -> Layer: {split[0]}");
             }
             else
             {
-                Console.WriteLine("[Error] Invalid data format, must be the following! (arrow is NOT part of the format)");
-                Console.WriteLine("[Error]  -> [layer name] || [lobby code]");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Error("Invalid data format, must be the following! (arrow is NOT part of the format)");
+                Logger.Error(" -> [layer name] || [lobby code]");
+                await ExitApp();
                 return;
             }
 
@@ -93,24 +98,24 @@ namespace Bridge
             var root = current?.Parent?.Parent;
             if (root == null)
             {
-                Console.WriteLine("[Error] Failed to find game folder!");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Error("Failed to find game folder!");
+                await ExitApp();
                 return;
             }
             var executable = root.GetFiles().FirstOrDefault(x => x.Name.StartsWith("BONELAB") && x.Name.EndsWith(".exe"));
             if (executable == null)
             {
-                Console.WriteLine("[Error] Failed to find executable!");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Error("Failed to find executable!");
+                await ExitApp();
                 return;
             }
 
             if (IsRunning(executable.FullName))
             {
-                Console.WriteLine("Game is launched, sending a request to join..");
+                Logger.Info("Game is launched, sending a request to join..");
                 await client.PostAsync($"{HOST}join", content);
-                Console.WriteLine("Sent a request to the game, it should join the lobby in a second");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Info("Sent a request to the game, it should join the lobby in a second...");
+                await ExitApp();
             }
             else
             {
@@ -120,10 +125,40 @@ namespace Bridge
                 process.StartInfo.Arguments = $"--flb-code={code} --flb-layer={Convert.ToBase64String(Encoding.UTF8.GetBytes(layer))}";
                 process.Start();
 
-                Console.WriteLine("Launched game!");
-                await Task.Delay(EXIT_DELAY);
+                Logger.Info("Launched game!");
+                await ExitApp();
             }
         }
+
+        private static async Task ExitApp()
+        {
+            string last = null;
+            string msg = null;
+            int seconds = EXIT_DELAY;
+            int top = -1;
+            while (seconds > -1)
+            {
+                if (last == null && msg == null)
+                {
+                    last = $"{seconds}...".Pastel(Color.AliceBlue);
+                    msg = Logger.Info($"The app will exit in {last}");
+                }
+                else
+                {
+                    if (top == -1)
+                        top = Console.CursorTop - 1;
+                    Console.SetCursorPosition(msg.RemoveANSI().Length - last.RemoveANSI().Length, top);
+                    last = $"{seconds}...".Pastel(Color.AliceBlue);
+                    Console.Write(last);
+                }
+                await Task.Delay(1000);
+                seconds--;
+            }
+            Environment.Exit(0);
+        }
+
+        private static string RemoveANSI(this string s)
+            => Regex.Replace(s, @"(\x1B|\e|\033)\[(.*?)m", "");
 
         private static bool IsRunning(string FullPath)
         {
