@@ -41,8 +41,8 @@ namespace FLB.Managers
                     await Join(req, resp);
                 else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/")
                     await resp.Respond("OK", 200);
-
-                await resp.Respond("Not Found", 404);
+                else
+                    await resp.Respond("Not Found", 404);
             }
         }
 
@@ -64,17 +64,13 @@ namespace FLB.Managers
             layer = layerElem.GetString();
 
             if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(layer))
-            {
                 await resp.Respond("Missing code or layer parameter.", 400);
-            }
-            else
-            {
-                await resp.Respond("Join request received.", 200);
-                Core.Logger.Msg("Received join request");
-                Core.Logger.Msg($"[+] Layer: {layer}");
-                Core.Logger.Msg($"[+] Code: {code}");
-                Requests.Add($"{layer}-{code}");
-            }
+
+            Core.Logger.Msg("Received join request");
+            Core.Logger.Msg($"[+] Layer: {layer}");
+            Core.Logger.Msg($"[+] Code: {code}");
+            Requests.Add($"{layer}-{code}");
+            await resp.Respond("Join request received.", 200);
         }
 
         public static async Task Respond(this HttpListenerResponse resp, string message, int statusCode = 200)

@@ -18,8 +18,6 @@ namespace Bridge
 
         private const string HOST = "http://localhost:25712/";
 
-        private const int EXIT_DELAY = 5;
-
         private readonly static Logger Logger = new();
 
         public static async Task Main(string[] args)
@@ -85,10 +83,7 @@ namespace Bridge
             string layer = split[0];
             string code = split[1];
 
-            var client = new HttpClient
-            {
-                Timeout = new TimeSpan(0, 0, 2)
-            };
+            var client = new HttpClient();
             var content = new StringContent(
                 JsonSerializer.Serialize(new Payload(code, layer)),
                 Encoding.UTF8,
@@ -113,8 +108,17 @@ namespace Bridge
             if (IsRunning(executable.FullName))
             {
                 Logger.Info("Game is launched, sending a request to join..");
-                await client.PostAsync($"{HOST}join", content);
-                Logger.Info("Sent a request to the game, it should join the lobby in a second...");
+                try
+                {
+                    await client.PostAsync($"{HOST}join", content);
+                    Logger.Info("Sent a request to the game, it should join the lobby in a second...");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("The HTTP request failed to send, exception:");
+                    Logger.Error(ex.ToString());
+                    await ExitApp(15);
+                }
                 await ExitApp();
             }
             else
@@ -130,11 +134,10 @@ namespace Bridge
             }
         }
 
-        private static async Task ExitApp()
+        private static async Task ExitApp(int seconds = 5)
         {
             string last = null;
             string msg = null;
-            int seconds = EXIT_DELAY;
             int top = -1;
             while (seconds > -1)
             {
@@ -157,7 +160,7 @@ namespace Bridge
             Environment.Exit(0);
         }
 
-        private static string RemoveANSI(this string s)
+        public static string RemoveANSI(this string s)
             => Regex.Replace(s, @"(\x1B|\e|\033)\[(.*?)m", "");
 
         private static bool IsRunning(string FullPath)
