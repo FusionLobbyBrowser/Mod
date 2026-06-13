@@ -25,7 +25,10 @@ namespace FLB.Managers
 #pragma warning disable CA1416 // Validate platform compatibility
             var classes = Registry.CurrentUser.OpenSubKey("Software", true)?.OpenSubKey("Classes", true);
             RegistryKey key = classes?.OpenSubKey(name);
-            if (key == null)
+            if (key == null
+                || key?.GetSubKeyNames()?.Length <= 0
+                || key?.GetSubKeyNames()?.FirstOrDefault() == null
+                || (string)key.OpenSubKey(key.GetSubKeyNames().FirstOrDefault()).GetValue(string.Empty) != path)
             {
                 key = classes.CreateSubKey(name);
                 key.SetValue(string.Empty, "URL: " + name);

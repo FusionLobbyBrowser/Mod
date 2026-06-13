@@ -15,6 +15,8 @@ namespace Bridge
 
         public string FileName { get; private set; } = DEFAULT_FILE;
 
+        public string FilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FileName);
+
         public Logger()
         {
             this.Level = LogLevel.Info;
@@ -48,7 +50,10 @@ namespace Bridge
 
         private void Clear()
         {
-            using FileStream fileStream = File.Open(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FileName), FileMode.Open);
+            if (!File.Exists(FilePath))
+                return;
+
+            using FileStream fileStream = File.Open(FilePath, FileMode.Open);
             fileStream.SetLength(0);
             fileStream.Close();
         }
@@ -96,7 +101,7 @@ namespace Bridge
             var str = (color != null ? _type.Pastel(color.Value) : _type) + (color != null && colorWholeText ? msg.Pastel(color.Value) : msg);
             Console.WriteLine(str);
             var clean = (_type + msg).RemoveANSI();
-            using (StreamWriter w = File.AppendText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FileName)))
+            using (StreamWriter w = File.AppendText(FilePath))
                 w.WriteLine(clean);
             return clean;
         }
