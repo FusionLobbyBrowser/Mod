@@ -29,7 +29,7 @@ namespace Bridge
 
         public static Config Config { get; private set; }
 
-        private readonly static Logger Logger = new();
+        public readonly static Logger Logger = new();
 
         [DllImport("kernel32.dll", EntryPoint = "GetStdHandle", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         private static extern IntPtr GetStdHandle(int nStdHandle);
@@ -141,7 +141,7 @@ namespace Bridge
             }
             else
             {
-                LaunchGame(executable, root, payload);
+                await LaunchGame(executable, root, payload);
 
                 Logger.Info("Launched game!");
                 await ExitApp();
@@ -167,17 +167,17 @@ namespace Bridge
             }
         }
 
-        private static void LaunchGame(FileInfo executable, DirectoryInfo root, Payload payload)
+        private static async Task LaunchGame(FileInfo executable, DirectoryInfo root, Payload payload)
         {
             if (OperatingSystem.IsWindows())
             {
                 SteamPath = GetWindowsPath();
-                SteamLaunch(executable, root, payload);
+                await SteamLaunch(executable, root, payload);
             }
             else if (OperatingSystem.IsLinux())
             {
                 SteamPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".steam", "steam");
-                SteamLaunch(executable, root, payload);
+                await SteamLaunch(executable, root, payload);
             }
             else
             {
@@ -230,20 +230,21 @@ namespace Bridge
             process.Start();
         }
 
-        private static void SteamLaunch(FileInfo executable, DirectoryInfo root, Payload payload)
+        private static async Task SteamLaunch(FileInfo executable, DirectoryInfo root, Payload payload)
         {
-            if (!HasSteamGame())
+            if (!HasSteamGame() || !Config.LaunchWithSteam)
             {
-                if (Config.NonSteamAppID == "-1")
+                if (Config.NonSteamAppID == "-1" || !Config.LaunchWithSteam)
                 {
                     Logger.Warning("User does not own the game, direct launch imminent");
-                    Logger.Warning("If you'd like to launch the game (Meta Oculus Link version) with Steam, follow the instructions on the github repository!");
+                    if (Config.LaunchWithSteam)
+                        Logger.Warning("If you'd like to launch the game (Meta Oculus Link version) with Steam, follow the instructions on the github repository!");
                     DirectLaunch(executable, root, payload);
                 }
                 else
                 {
                     Logger.Info($"Launching non-steam game through Steam... (App ID: {Config.NonSteamAppID})");
-                    LaunchNonSteamGame(payload, Config.NonSteamAppID);
+                    await LaunchNonSteamGame(payload, Config.NonSteamAppID);
                 }
             }
             else
@@ -262,13 +263,18 @@ namespace Bridge
             process.Start();
         }
 
-        private static void LaunchNonSteamGame(Payload payload, string appId)
+        private static async Task LaunchNonSteamGame(Payload payload, string appId)
         {
             var process = new Process();
             process.StartInfo.FileName = $"steam://launch/{appId}//{Arguments(payload, true)}";
-            Logger.Info(process.StartInfo.FileName);
             process.StartInfo.UseShellExecute = true;
             process.Start();
+            HttpManager.Payload = payload;
+            _ = HttpManager.Start();
+            await Task.Delay(60 * 1000);
+            Logger.Info("Timeout, closing...");
+            HttpManager.Stop();
+            Environment.Exit(0);
         }
 
         private static bool HasSteamGame()

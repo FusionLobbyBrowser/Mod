@@ -16,6 +16,9 @@ namespace Bridge
         [JsonPropertyName("hideConsole")]
         public bool HideConsole { get; set; } = true;
 
+        [JsonPropertyName("launchWithSteam")]
+        public bool LaunchWithSteam { get; set; } = true;
+
         [JsonPropertyName("nonSteamAppId")]
         public string NonSteamAppID { get; set; } = "-1";
     }

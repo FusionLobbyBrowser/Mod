@@ -2,8 +2,6 @@
 using System.Text;
 using System.Text.Json;
 
-using LabFusion.Extensions;
-
 using MelonLoader;
 
 namespace FLB.Managers
@@ -13,8 +11,6 @@ namespace FLB.Managers
         public static void Setup()
         {
             Core.Logger.Msg("[===== ARGUMENTS =====]");
-            Core.Logger.Msg("Arguments passed:");
-            MelonLaunchOptions.CommandLineArgs.ForEach(x => Core.Logger.Msg($" -> {x}"));
             if (MelonLaunchOptions.ExternalArguments.TryGetValue("flb-code", out string code)
                 && MelonLaunchOptions.ExternalArguments.TryGetValue("flb-layer", out string layer))
             {

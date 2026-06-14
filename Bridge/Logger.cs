@@ -94,13 +94,14 @@ namespace Bridge
             return Msg(msg, "WARN", Color.Orange, false);
         }
 
-        private string Msg(string message, string type, Color? color = null, bool colorWholeText = true)
+        public string Msg(string message, string type, Color? color = null, bool colorWholeText = true)
         {
             string msg = FormatPrefix() + message;
+            string _time = $"[{DateTime.Now:T}] ";
             string _type = $"[{type.ToUpper()}] ";
-            var str = (color != null ? _type.Pastel(color.Value) : _type) + (color != null && colorWholeText ? msg.Pastel(color.Value) : msg);
+            var str = _time.Pastel("#45ff76") + (color != null ? _type.Pastel(color.Value) : _type) + (color != null && colorWholeText ? msg.Pastel(color.Value) : msg);
             Console.WriteLine(str);
-            var clean = (_type + msg).RemoveANSI();
+            var clean = (_time + _type + msg).RemoveANSI();
             using (StreamWriter w = File.AppendText(FilePath))
                 w.WriteLine(clean);
             return clean;

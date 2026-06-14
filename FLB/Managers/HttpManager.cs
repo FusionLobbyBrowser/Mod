@@ -6,12 +6,16 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Net.Http;
+using System.Reflection;
 
 namespace FLB.Managers
 {
     internal static class HttpManager
     {
         public static int Port { get; set; } = 25712;
+
+        public static int BridgePort { get; set; } = 39373;
 
         private static HttpListener Listener { get; set; }
 
@@ -76,7 +80,7 @@ namespace FLB.Managers
             resp.Close();
         }
 
-        public static void Setup()
+        public static async Task Setup()
         {
             Core.Logger.Msg("[======== HTTP =======]");
             Core.Logger.Msg("Starting HTTP Server...");
@@ -91,6 +95,17 @@ namespace FLB.Managers
                 Core.Logger.Error("Failed to start HTTP Server :(", ex);
             }
             Core.Logger.Msg("[===================]");
+            Core.Logger.Msg("Checking for Bridge...");
+            var client = new HttpClient();
+            var res = await client.GetAsync($"http://localhost:{BridgePort}");
+            if (res.IsSuccessStatusCode)
+            {
+                var payload = await JsonSerializer.DeserializeAsync<Payload>(await res.Content.ReadAsStreamAsync());
+                Core.Logger.Msg("Got payload from Bridge! Joining...");
+                FusionManager.Join(payload.Code, payload.Layer);
+                await Task.Delay(3500);
+                BridgeManager.FileCreate(Assembly.GetExecutingAssembly());
+            }
         }
 
         public static void Start()
