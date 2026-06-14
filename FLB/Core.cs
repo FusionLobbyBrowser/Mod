@@ -1,6 +1,8 @@
-﻿using MelonLoader;
+﻿using System.Text.Json.Serialization;
 
 using FLB.Managers;
+
+using MelonLoader;
 
 namespace FLB
 {
@@ -32,5 +34,15 @@ namespace FLB
         {
             HttpManager.Update();
         }
+    }
+
+    [method: JsonConstructor]
+    public struct Payload(string code, string layer)
+    {
+        [JsonPropertyName("code")]
+        public string Code { get; set; } = code;
+
+        [JsonPropertyName("layer")]
+        public string Layer { get; set; } = layer;
     }
 }

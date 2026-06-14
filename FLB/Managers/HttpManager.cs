@@ -17,7 +17,7 @@ namespace FLB.Managers
 
         public static bool ShutdownRequested { get; set; } = false;
 
-        private static readonly List<string> Requests = [];
+        private static readonly List<Payload> Requests = [];
 
         public static async Task HandleRequests()
         {
@@ -52,24 +52,17 @@ namespace FLB.Managers
             using var reader = new StreamReader(req.InputStream, req.ContentEncoding);
             var body = await reader.ReadToEndAsync();
             Core.Logger.Msg("Received: " + body);
-            var json = JsonSerializer.Deserialize<JsonElement>(body);
-            string code, layer;
-            if (!json.TryGetProperty("code", out var codeElem) || !json.TryGetProperty("layer", out var layerElem))
+            var json = JsonSerializer.Deserialize<Payload>(body);
+            if (string.IsNullOrWhiteSpace(json.Code) || string.IsNullOrWhiteSpace(json.Layer))
             {
                 await resp.Respond("Missing code or layer parameter.", 400);
                 return;
             }
 
-            code = codeElem.GetString();
-            layer = layerElem.GetString();
-
-            if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(layer))
-                await resp.Respond("Missing code or layer parameter.", 400);
-
             Core.Logger.Msg("Received join request");
-            Core.Logger.Msg($"[+] Layer: {layer}");
-            Core.Logger.Msg($"[+] Code: {code}");
-            Requests.Add($"{layer}-{code}");
+            Core.Logger.Msg($"[+] Layer: {json.Layer}");
+            Core.Logger.Msg($"[+] Code: {json.Code}");
+            Requests.Add(json);
             await resp.Respond("Join request received.", 200);
         }
 
@@ -122,7 +115,7 @@ namespace FLB.Managers
         {
             if (Requests.Any())
             {
-                Requests.ForEach(FusionManager.ArgJoin);
+                Requests.ForEach(x => FusionManager.Join(x.Code, x.Layer));
                 Requests.Clear();
             }
         }

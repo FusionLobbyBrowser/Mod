@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
+		<OutputType>WinExe</OutputType>
 		<TargetFramework>net6.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -9,7 +9,12 @@
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="ECHO Copying $(TargetName).exe to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).exe&quot; &quot;../FLB/Dependencies/&quot;" />
+		<Exec Command="ECHO Copying Gameloop.Vdf.dll to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)Gameloop.Vdf.dll&quot; &quot;../FLB/Dependencies/&quot;" />
 		<Exec Command="ECHO Copying $(TargetName).dll to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).dll&quot; &quot;../FLB/Dependencies/&quot;" />
 		<Exec Command="ECHO Copying $(TargetName).runtimeconfig.json to Dependencies folder&#xD;&#xA; COPY &quot;$(TargetDir)$(TargetName).runtimeconfig.json&quot; &quot;../FLB/Dependencies/&quot;" />
 	</Target>
+
+	<ItemGroup>
+		<PackageReference Include="Gameloop.Vdf" Version="0.6.2" />
+	</ItemGroup>
 </Project>

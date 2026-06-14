@@ -13,17 +13,20 @@ namespace FLB.Managers
 
         public static string USERDATA => Path.Combine(MelonEnvironment.UserDataDirectory, "FLB");
 
-        public static Stream GetFile(string name)
+        public static Stream GetFile(this Assembly assembly, string name, out string fileName)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-
             var _name = assembly.GetName().Name;
+            string begin = $"{_name}.{DIRECTORY}";
+            if (name.StartsWith(begin))
+                name = name.Replace(begin, string.Empty);
+
             var path = $"{_name}.{DIRECTORY}{name}";
+            fileName = name;
 
             return assembly.GetManifestResourceStream(path);
         }
 
-        public static void CreateFile(string name)
+        public static void CreateFile(this Assembly assembly, string name)
         {
             if (!Directory.Exists(USERDATA))
             {
@@ -31,24 +34,26 @@ namespace FLB.Managers
                 Directory.CreateDirectory(USERDATA);
             }
 
-            Core.Logger.Msg($"Creating {name}");
-
-            using var embed = GetFile(name);
-            using var stream = File.Create(Path.Combine(USERDATA, name));
+            using var embed = GetFile(assembly, name, out string fileName);
+            Core.Logger.Msg($"Creating {fileName}");
+            using var stream = File.Create(Path.Combine(USERDATA, fileName));
             stream.Position = 0;
             embed.Position = 0;
             embed.CopyTo(stream);
             stream.Flush();
 
-            Core.Logger.Msg($"Created {name}");
+            Core.Logger.Msg($"Created {fileName}");
         }
 
         public static void Setup()
         {
             Core.Logger.Msg("[======= BRIDGE =======]");
-            CreateFile($"{FILE_NAME}.exe");
-            CreateFile($"{FILE_NAME}.dll");
-            CreateFile($"{FILE_NAME}.runtimeconfig.json");
+
+            var assembly = Assembly.GetExecutingAssembly();
+
+            foreach (var name in assembly.GetManifestResourceNames())
+                assembly.CreateFile(Path.GetFileName(name));
+
             UriManager.RegisterURI("flb-bridge", Path.Combine(USERDATA, $"{FILE_NAME}.exe"), true);
         }
     }
