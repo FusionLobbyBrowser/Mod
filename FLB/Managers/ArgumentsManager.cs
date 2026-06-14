@@ -14,11 +14,12 @@ namespace FLB.Managers
             if (MelonLaunchOptions.ExternalArguments.TryGetValue("flb-code", out string code)
                 && MelonLaunchOptions.ExternalArguments.TryGetValue("flb-layer", out string layer))
             {
-                Join(code, layer);
+                Join(code, layer, true);
             }
             else if (MelonLaunchOptions.ExternalArguments.TryGetValue("flb-encoded", out string encoded))
             {
-                byte[] data = Convert.FromBase64String(encoded.FixBase64());
+                var @fixed = encoded.FixBase64();
+                byte[] data = Convert.FromBase64String(@fixed);
                 Payload payload = JsonSerializer.Deserialize<Payload>(Encoding.UTF8.GetString(data));
                 Join(payload.Code, payload.Layer);
             }
@@ -29,12 +30,15 @@ namespace FLB.Managers
         }
 
         // Layer in base64
-        private static void Join(string code, string layer)
+        private static void Join(string code, string layer, bool decodeLayer = false)
         {
-            byte[] data = Convert.FromBase64String(layer);
-            string decodedLayer = Encoding.UTF8.GetString(data);
+            if (decodeLayer)
+            {
+                byte[] data = Convert.FromBase64String(layer);
+                layer = Encoding.UTF8.GetString(data);
+            }
             Core.Logger.Msg("Game was launched with arguments, queueing join");
-            FusionManager.Join(code, decodedLayer);
+            FusionManager.Join(code, layer);
         }
 
         private static string FixBase64(this string base64)

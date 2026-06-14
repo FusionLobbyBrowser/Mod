@@ -194,10 +194,10 @@ namespace Bridge
         }
 
         private static string ToBrokenBase64(this string text)
-            => Convert.ToBase64String(Encoding.UTF8.GetBytes(text)).RemoveAll(@"\+").RemoveAll(@"\/").RemoveAll(@"\=+$");
+            => Convert.ToBase64String(Encoding.UTF8.GetBytes(text)).ReplaceRegex(@"\+", "-").ReplaceRegex(@"\/", "_").ReplaceRegex(@"\=+$", "");
 
-        private static string RemoveAll(this string text, string pattern)
-            => Regex.Replace(text, pattern, string.Empty);
+        private static string ReplaceRegex(this string text, string pattern, string replacement)
+            => Regex.Replace(text, pattern, replacement);
 
         private static void SetupConsole()
         {
@@ -244,37 +244,32 @@ namespace Bridge
                 else
                 {
                     Logger.Info($"Launching non-steam game through Steam... (App ID: {Config.NonSteamAppID})");
-                    await LaunchNonSteamGame(payload, Config.NonSteamAppID);
+                    await LaunchWithSteam(payload, Config.NonSteamAppID, true, "launch", false);
                 }
             }
             else
             {
                 Logger.Info("Launching bought game through Steam...");
-                LaunchSteamGame(payload);
+                await LaunchWithSteam(payload);
             }
         }
 
-        private static void LaunchSteamGame(Payload payload, string appId = APP_ID)
+        private static async Task LaunchWithSteam(Payload payload, string appId = APP_ID, bool startHTTP = false, string type = "run", bool useArgs = true)
         {
             var process = new Process();
-            process.StartInfo.FileName = Path.Combine(SteamPath, OperatingSystem.IsWindows() ? "steam.exe" : "steam");
-            process.StartInfo.WorkingDirectory = SteamPath;
-            process.StartInfo.Arguments = $"-applaunch ${appId} --flb-code={payload.Code} --flb-layer={Convert.ToBase64String(Encoding.UTF8.GetBytes(payload.Layer))}";
-            process.Start();
-        }
-
-        private static async Task LaunchNonSteamGame(Payload payload, string appId)
-        {
-            var process = new Process();
-            process.StartInfo.FileName = $"steam://launch/{appId}//{Arguments(payload, true)}";
+            process.StartInfo.FileName = $"steam://{type}/{appId}/{(useArgs ? $"/{Arguments(payload, true)}" : string.Empty)}";
+            Logger.Info(process.StartInfo.FileName);
             process.StartInfo.UseShellExecute = true;
             process.Start();
-            HttpManager.Payload = payload;
-            _ = HttpManager.Start();
-            await Task.Delay(60 * 1000);
-            Logger.Info("Timeout, closing...");
-            HttpManager.Stop();
-            Environment.Exit(0);
+            if (startHTTP)
+            {
+                HttpManager.Payload = payload;
+                _ = HttpManager.Start();
+                await Task.Delay(60 * 1000);
+                Logger.Info("Timeout, closing...");
+                HttpManager.Stop();
+                Environment.Exit(0);
+            }
         }
 
         private static bool HasSteamGame()
