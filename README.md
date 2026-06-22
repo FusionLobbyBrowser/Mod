@@ -37,7 +37,7 @@ Unfortunately, Steam does not have a straightforward way of launching a non-stea
 To setup, you need to configure the `NonSteamAppID` option. To do so:
 
 * Create a shortcut (if you don't have one already) for BONELAB by going to the Steam application, on top the `Games` tab and `Add a Non-Steam Game to My Library`. There select the executable of BONELAB (should be `BONELAB_Oculus_Windows64.exe`).
-  * If you don't know the location, go to the Meta Horizon Link app. Once you're there go the Library and press the 3 dots on BONELAB. Next go to Details and copy the location provided there. This is the location where the executable is located. You can simply paste it into the location bar (fuck you Tarek) in File Explorer.
+  * If you don't know the location, go to the Meta Horizon Link app. Once you're there go the Library and press the 3 dots on BONELAB. Next go to Details and copy the location provided there. This is the location where the executable is located. You can simply paste it into the location bar in File Explorer.
 * Next, you need to have a desktop shortcut file. If you haven't created one already, right-click the shortcut in the Steam Library, go to Manage and press `Add desktop shortcut`.
 * Locate the file on your Desktop and open the contents with Notepad or another text editor.
 * Look for a URL parameter (which should look like `URL=steam://rungameid/10844567662499987456`). When you've done so, copy the numbers and paste it into the configuration file (NOTE: you **MUST** put it in "", so basically: `"nonSteamAppId": "10844567662499987456"`).
