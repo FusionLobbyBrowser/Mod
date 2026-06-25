@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 
 using MelonLoader.Utils;
 
@@ -71,6 +72,20 @@ namespace FLB.Managers
             else
             {
                 FileCreate(assembly);
+            }
+
+            var path = Path.Combine(USERDATA, "launch.json");
+            if (File.Exists(path))
+            {
+                Core.Logger.Msg("Found file with payload!");
+                var payload = JsonSerializer.Deserialize<FilePayload>(File.ReadAllText(path));
+                if (payload.Time != -1
+                    && (DateTimeOffset.Now.ToUnixTimeSeconds() - payload.Time) < (60 * 15))
+                {
+                    Core.Logger.Msg("Joining with info provided in the file");
+                    FusionManager.Join(payload.Code, payload.Layer);
+                    File.Delete(path);
+                }
             }
 
             UriManager.RegisterURI("flb-bridge", Path.Combine(USERDATA, $"{FILE_NAME}.exe"), true);

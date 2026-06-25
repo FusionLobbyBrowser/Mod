@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 using FLB.Managers;
 
@@ -44,5 +45,18 @@ namespace FLB
 
         [JsonPropertyName("layer")]
         public string Layer { get; set; } = layer;
+    }
+
+    [method: JsonConstructor]
+    public struct FilePayload(string code, string layer, long time = -1)
+    {
+        [JsonPropertyName("code")]
+        public string Code { get; set; } = code;
+
+        [JsonPropertyName("layer")]
+        public string Layer { get; set; } = layer;
+
+        [JsonPropertyName("time")]
+        public long Time { get; set; } = time;
     }
 }

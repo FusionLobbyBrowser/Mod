@@ -244,7 +244,7 @@ namespace Bridge
                 else
                 {
                     Logger.Info($"Launching non-steam game through Steam... (App ID: {Config.NonSteamAppID})");
-                    await LaunchWithSteam(payload, Config.NonSteamAppID, true, "launch", false);
+                    await LaunchWithSteam(payload, Config.NonSteamAppID);
                 }
             }
             else
@@ -254,22 +254,14 @@ namespace Bridge
             }
         }
 
-        private static async Task LaunchWithSteam(Payload payload, string appId = APP_ID, bool startHTTP = false, string type = "run", bool useArgs = true)
+        private static async Task LaunchWithSteam(Payload payload, string appId = APP_ID, string type = "launch", bool useArgs = false)
         {
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "launch.json");
+            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(new FilePayload(payload.Code, payload.Layer)));
             var process = new Process();
             process.StartInfo.FileName = $"steam://{type}/{appId}/{(useArgs ? $"/{Arguments(payload, true)}" : string.Empty)}";
-            Logger.Info(process.StartInfo.FileName);
             process.StartInfo.UseShellExecute = true;
             process.Start();
-            if (startHTTP)
-            {
-                HttpManager.Payload = payload;
-                _ = HttpManager.Start();
-                await Task.Delay(60 * 1000);
-                Logger.Info("Timeout, closing...");
-                HttpManager.Stop();
-                Environment.Exit(0);
-            }
         }
 
         private static bool HasSteamGame()
@@ -375,6 +367,19 @@ namespace Bridge
 
         [JsonPropertyName("layer")]
         public string Layer { get; set; } = layer;
+    }
+
+    [method: JsonConstructor]
+    public struct FilePayload(string code, string layer, long? time = null)
+    {
+        [JsonPropertyName("code")]
+        public string Code { get; set; } = code;
+
+        [JsonPropertyName("layer")]
+        public string Layer { get; set; } = layer;
+
+        [JsonPropertyName("time")]
+        public long Time { get; set; } = time ?? DateTimeOffset.Now.ToUnixTimeSeconds();
     }
 
     public static class ConsoleColors

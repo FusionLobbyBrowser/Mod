@@ -95,17 +95,6 @@ namespace FLB.Managers
                 Core.Logger.Error("Failed to start HTTP Server :(", ex);
             }
             Core.Logger.Msg("[===================]");
-            Core.Logger.Msg("Checking for Bridge...");
-            var client = new HttpClient();
-            var res = await client.GetAsync($"http://localhost:{BridgePort}");
-            if (res.IsSuccessStatusCode)
-            {
-                var payload = await JsonSerializer.DeserializeAsync<Payload>(await res.Content.ReadAsStreamAsync());
-                Core.Logger.Msg("Got payload from Bridge! Joining...");
-                FusionManager.Join(payload.Code, payload.Layer);
-                await Task.Delay(3500);
-                BridgeManager.FileCreate(Assembly.GetExecutingAssembly());
-            }
         }
 
         public static void Start()
